@@ -1,71 +1,38 @@
 import React from 'react';
 import { Button, Form } from 'semantic-ui-react';
-import { Label, Table, Segment } from 'semantic-ui-react'
+import { Table, Segment } from 'semantic-ui-react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { formatDate, formatAmount } from './Utils/Utils';
+import { formatDate, formatAmount } from '../Utils/Utils';
+import { Calculator } from '../Models/Calculator';
 
 /**
  * http://mobile-testing.ru/loancalc/rachet_dosrochnogo_pogashenia/
  */
-
-export class CalcPage extends React.Component {
+export class CalculatorPage extends React.Component {
 
     constructor(props) {
         super(props);
 
         this.state = {
-            // Сумма кредита
+            // Инстанс калькулятора
+            calculator: null,
+            // Значение инпута Сумма кредита
             creditAmount: '',
-            // Процентная ставка
+            // Значение инпута Процентная ставка
             rate: '',
-            // Количество месяцев
+            // Значение инпута Количество месяцев
             monthsCount: '',
-            // Дата платежа
+            // Значение инпута Дата платежа
             startDate: new Date(),
-
             showCalculateButton: false,
             showResult: false
         }
     }
 
-    getPayment() {
-        const i = this.getMonthRate();
-        const n = this.getMonthsCount();
-        const a = this.getCreditAmount();
-
-        const payment = a * (
-            i * Math.pow((1 + i), n)
-        ) / (
-                Math.pow((1 + i), n) - 1
-            );
-
-        return payment;
-    }
-
     /**
-     * Возвращает процентную ставку по займу в месяц.
+     * Вычисляет необходимость отображения кнопки "Рассчитать".
      */
-    getMonthRate() {
-        // Умножаем на 0.01, чтобы преобразовать к сотым долям: 12 % => 0.12 %
-        // Т.к. указана годовая ставка, необходимо разделить её на 12, чтобы получить ставку в месяц.
-        return (parseFloat(this.state.rate) * 0.01) / 12;
-    }
-
-    /**
-     * Возвращает количетво месяцев, на которые производится расчёт.
-     */
-    getMonthsCount() {
-        return parseInt(this.state.monthsCount);
-    }
-
-    /**
-     * Возвращает количетво месяцев, на которые производится расчёт.
-     */
-    getCreditAmount() {
-        return parseInt(this.state.creditAmount);
-    }
-
     checkCalculateButtonVisbility() {
         const { rate, creditAmount, monthsCount, startDate } = this.state;
 
@@ -76,32 +43,62 @@ export class CalcPage extends React.Component {
         }
     }
 
+    /**
+     * Обработчик изменения значения в поле Сумма кредита.
+     */
     handleCreditAmountChange = (event) => {
         this.setState({
             creditAmount: event.target.value
         }, this.checkCalculateButtonVisbility);
     }
 
+    /**
+     * Обработчик изменения значения в поле Процентная ставка.
+     */
     handleRateChange = (event) => {
         this.setState({
-            rate: event.target.value
+            rate: event.target.value.replace(',', '.')
         }, this.checkCalculateButtonVisbility);
     }
 
+    /**
+     * Обработчик изменения значения в поле Количество месяцев.
+     */
     handleMonthsCountChange = (event) => {
         this.setState({
             monthsCount: event.target.value
         }, this.checkCalculateButtonVisbility);
     }
 
+    /**
+     * Обработчик изменения значения в поле Дата первого ежемесячного платежа.
+     */
     handleDateChange = (startDate) => {
         this.setState({
             startDate
         }, this.checkCalculateButtonVisbility);
     }
 
+    /**
+     * Обработчик нажатия на кнопку "Рассчитать".
+     */
     handleCalculateButtonClick = () => {
+        const {
+            creditAmount,
+            rate,
+            monthsCount,
+            startDate
+        } = this.state;
+
+        const calculator = new Calculator(
+            parseFloat(creditAmount),
+            parseFloat(rate),
+            parseInt(monthsCount),
+            startDate
+        );
+
         this.setState({
+            calculator,
             showResult: true
         });
     }
@@ -157,7 +154,7 @@ export class CalcPage extends React.Component {
      * Рисует панель с результатами.
      */
     renderResultPanel() {
-        const monthPayment = this.getPayment();
+        const {calculator} = this.state;
 
         return (
             <Segment>
@@ -165,7 +162,7 @@ export class CalcPage extends React.Component {
                     <Table.Body>
                         <Table.Row>
                             <Table.Cell>Общая сумма выплат:</Table.Cell>
-                            <Table.Cell>{formatAmount(monthPayment * this.state.monthsCount)}</Table.Cell>
+                            <Table.Cell>{formatAmount(calculator.getTotalAmount())}</Table.Cell>
                         </Table.Row>
                     </Table.Body>
                 </Table>
@@ -174,26 +171,35 @@ export class CalcPage extends React.Component {
     }
 
     /**
-     * Рисует таблицу с результатами.
+     * Рисует строки таблицы с результатом.
      */
-    renderResultTable() {
-        const { monthsCount, startDate } = this.state;
+    renderResultRows() {
+        const {calculator} = this.state;
+        const payments = calculator.getPayments();
         const rows = [];
-        const payment = this.getPayment();
 
-        for (let i = 0; i < monthsCount; i++) {
-
-            const paymentDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + i));
+        for (let i = 0; i < calculator.getMonthsCount(); i++) {
+            const payment = payments[i];
 
             rows.push(
-                <Table.Row key={paymentDate}>
-                    <Table.Cell>{i + 1}</Table.Cell>
-                    <Table.Cell>{formatDate(paymentDate)}</Table.Cell>
-                    <Table.Cell>{formatAmount(payment)}</Table.Cell>
+                <Table.Row key={payment.date}>
+                    <Table.Cell>{payment.number}</Table.Cell>
+                    <Table.Cell>{formatDate(payment.date)}</Table.Cell>
+                    <Table.Cell>{formatAmount(payment.amount)}</Table.Cell>
+                    <Table.Cell>{formatAmount(payment.percents)}</Table.Cell>
+                    <Table.Cell>{formatAmount(payment.bodyPayment)}</Table.Cell>
+                    <Table.Cell>{formatAmount(payment.currentCreditBody)}</Table.Cell>
                 </Table.Row>
             );
         }
 
+        return rows;
+    }
+
+    /**
+     * Рисует таблицу с результатами.
+     */
+    renderResultTable() {
         return (
             <Table celled>
                 <Table.Header>
@@ -201,10 +207,13 @@ export class CalcPage extends React.Component {
                         <Table.HeaderCell>Номер платежа</Table.HeaderCell>
                         <Table.HeaderCell>Дата платежа</Table.HeaderCell>
                         <Table.HeaderCell>Сумма платежа</Table.HeaderCell>
+                        <Table.HeaderCell>Проценты за текущий месяц</Table.HeaderCell>
+                        <Table.HeaderCell>Плата в счёт тела кредита</Table.HeaderCell>
+                        <Table.HeaderCell>Тело кредита</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
 
-                <Table.Body>{rows}</Table.Body>
+                <Table.Body>{this.renderResultRows()}</Table.Body>
             </Table>
         );
     }
@@ -213,7 +222,7 @@ export class CalcPage extends React.Component {
         const {showResult} = this.state;
 
         return (
-            <div className="calc-page">
+            <div className="calculator-page">
                 {/* Блок для ввода значений */}
                 {this.renderInputPanel()}
 

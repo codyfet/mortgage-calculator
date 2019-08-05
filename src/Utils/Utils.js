@@ -57,3 +57,16 @@ export function getNumberDaysOfYear(year) {
 function isLeapYear(year) {
     return year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0);
 }
+
+/**
+ * Вовращает разницу в днях между Второй датой и Первой датой.
+ *
+ * @param {Date} date1 Первая дата.
+ * @param {Date} date2 Вторая дата.
+ */
+export function getDifferenceDaysBetweenDates(date1, date2) {
+    const diffTime = Math.abs(date2.getTime() - date1.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+}

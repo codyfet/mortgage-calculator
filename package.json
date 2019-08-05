@@ -1,5 +1,5 @@
 {
-  "name": "mortgage-calc",
+  "name": "loan-calculator",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "build": "webpack --mode production"
   },
   "keywords": [],
-  "author": "",
+  "author": "codyfet",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.5.5",

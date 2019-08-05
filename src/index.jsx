@@ -1,14 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom";
-// import { Button } from 'semantic-ui-react';
-import {CalcPage} from './CalcPage';
+import {CalculatorPage} from './Components/CalculatorPage';
 
 import "./styles";
 
-class HelloWorld extends React.Component {
+class App extends React.Component {
     render () {
-        return <CalcPage />
+        return <CalculatorPage />
     }
 }
 
-ReactDOM.render(<HelloWorld />, document.getElementById("root"));
+ReactDOM.render(<App />, document.getElementById("root"));
