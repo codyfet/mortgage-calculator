@@ -1,4 +1,4 @@
-import {getNumberDaysOfYear, getDifferenceDaysBetweenDates} from '../Utils/Utils';
+import {getNumberDaysOfYear, getDifferenceDaysBetweenDates, formatAmount} from '../Utils/Utils';
 
 /**
  * Класс Калькулятор ипотеки.
@@ -9,14 +9,15 @@ export class Calculator {
      * @param {number} rate Процентная ставка (в целом виде, например: 12)
      * @param {number} monthsCount Количество месяцев, на которые берется кредит.
      * @param {Date} startDate Дата первого ежемесячного платежа.
+     * @param {number} [monthlyRepayment] Сумма ежемесячного досрочного погашения.
      */
-    constructor(creditAmount, rate, monthsCount, startDate) {
+    constructor(creditAmount, rate, monthsCount, startDate, monthlyRepayment) {
         this.creditAmount = creditAmount;
         this.rate = rate;
         this.monthsCount = monthsCount;
         this.startDate = startDate;
+        this.monthlyRepayment = monthlyRepayment;
         this.paymentAmount = this._calculatePaymentAmount();
-        this.totalAmount = this.paymentAmount * monthsCount;
         this.payments = this._calculatePayments();
     }
 
@@ -36,8 +37,16 @@ export class Calculator {
         return this.monthsCount;
     }
 
+    _setMonthsCount (monthsCount) {
+        this.monthsCount = monthsCount;
+    }
+
     getStartDate () {
         return this.startDate;
+    }
+
+    getMonthlyRepayment () {
+        return this.monthlyRepayment;
     }
 
     getPaymentAmount () {
@@ -45,7 +54,7 @@ export class Calculator {
     }
 
     getTotalAmount () {
-        return this.totalAmount;
+        return this.getPaymentAmount() * this.getMonthsCount();
     }
 
     getPayments () {
@@ -86,6 +95,7 @@ export class Calculator {
         const startDate = this.getStartDate();
         const creditAmount = this.getCreditAmount();
         const paymentAmount = this.getPaymentAmount();
+        const monthlyRepayment = this.getMonthlyRepayment();
 
         for (let i = 0; i < this.getMonthsCount(); i++) {
             const paymentDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + i));
@@ -94,14 +104,31 @@ export class Calculator {
             const bodyPayment = paymentAmount - percents;
             const newCurrentCreditBody = currentCreditBody - bodyPayment;
 
-            payments.push({
-                number: i + 1,
-                date: paymentDate,
-                amount: paymentAmount,
-                percents: percents,
-                bodyPayment: bodyPayment,
-                currentCreditBody: newCurrentCreditBody
-            });
+            // Уменьшаем оставшееся тело кредита на сумму досрочного погашения за этот месяц.
+            if (i > 0 && payments[i - 1].repayments.length > 0) {
+                newCurrentCreditBody = newCurrentCreditBody - monthlyRepayment;
+            }
+
+            if (newCurrentCreditBody > 0) {
+                payments.push({
+                    number: i + 1,
+                    date: paymentDate,
+                    amount: paymentAmount,
+                    percents: percents,
+                    bodyPayment: bodyPayment,
+                    repayments: [{
+                        [formatAmount(paymentDate)]: monthlyRepayment
+                    }],
+                    currentCreditBody: newCurrentCreditBody
+                });
+            } else {
+                /**
+                 * Обычно клиент может выбрать сокращать ему срок или сокращать размер ежемесячного платежа)
+                 * Пока только сокращаем срок ипотеки.
+                 */
+                this._setMonthsCount(payments.length);
+                break;
+            }
         }
 
         return payments;

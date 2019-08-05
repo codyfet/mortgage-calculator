@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Form } from 'semantic-ui-react';
+import { Button, Form, Popup, Icon, Input } from 'semantic-ui-react';
 import { Table, Segment } from 'semantic-ui-react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -25,6 +25,9 @@ export class CalculatorPage extends React.Component {
             monthsCount: '',
             // Значение инпута Дата платежа
             startDate: new Date(),
+            // Значение инпута Сумма ежемесячного досрочного погашения
+            monthlyRepayment : 0,
+
             showCalculateButton: false,
             showResult: false
         }
@@ -71,6 +74,15 @@ export class CalculatorPage extends React.Component {
     }
 
     /**
+     * Обработчик изменения значения в поле Сумма ежемесячного досрочного погашения.
+     */
+    handleMonthlyRepaymentChange = (event) => {
+        this.setState({
+            monthlyRepayment: event.target.value
+        });
+    }
+
+    /**
      * Обработчик изменения значения в поле Дата первого ежемесячного платежа.
      */
     handleDateChange = (startDate) => {
@@ -87,14 +99,16 @@ export class CalculatorPage extends React.Component {
             creditAmount,
             rate,
             monthsCount,
-            startDate
+            startDate,
+            monthlyRepayment = 0
         } = this.state;
 
         const calculator = new Calculator(
             parseFloat(creditAmount),
             parseFloat(rate),
             parseInt(monthsCount),
-            startDate
+            startDate,
+            parseFloat(monthlyRepayment)
         );
 
         this.setState({
@@ -112,6 +126,7 @@ export class CalculatorPage extends React.Component {
             creditAmount,
             monthsCount,
             startDate,
+            monthlyRepayment,
             showCalculateButton,
         } = this.state;
 
@@ -120,21 +135,58 @@ export class CalculatorPage extends React.Component {
                 <Form>
                     <Form.Field>
                         <label>Сумма кредита:</label>
-                        <input placeholder="Например: 2 500 000" value={creditAmount} onChange={this.handleCreditAmountChange} />
+                        <Input
+                            label={{ basic: true, content: '₽' }}
+                            labelPosition='right'
+                            placeholder='Например: 2 500 000'
+                            value={creditAmount}
+                            onChange={this.handleCreditAmountChange}
+                        />
                     </Form.Field>
                     <Form.Field>
                         <label>Процентная ставка:</label>
-                        <input placeholder="Например: 10,1" value={rate} onChange={this.handleRateChange} />
+                        <Input
+                            label={{ basic: true, content: '%' }}
+                            labelPosition='right'
+                            placeholder='Например: 10,1'
+                            value={rate}
+                            onChange={this.handleRateChange}
+                        />
                     </Form.Field>
                     <Form.Field>
                         <label>Срок кредита (в месяцах):</label>
-                        <input placeholder="Например: 300" value={monthsCount} onChange={this.handleMonthsCountChange} />
+                        <Input
+                            label={!!monthsCount ? {
+                                basic: true,
+                                content: `${Math.floor(monthsCount/12)} лет`
+                            } : null}
+                            // labelPosition='right'
+                            placeholder="Например: 300"
+                            value={monthsCount}
+                            onChange={this.handleMonthsCountChange}
+                        />
                     </Form.Field>
                     <Form.Field>
                         <label>Дата первого платежа:</label>
                         <DatePicker
                             selected={startDate}
                             onChange={this.handleDateChange}
+                        />
+                    </Form.Field>
+                    <Form.Field>
+                        <label>
+                            Сумма ежемесячного досрочного погашения:
+                            <Popup
+                                content='Сумма, которую вы будете вносить сверх ежемесячного платежа в день ежемесячного платежа'
+                                trigger={<Icon name='info circle' />}
+                             />
+                        </label>
+                        <Input
+                            label={{ basic: true, content: '₽' }}
+                            labelPosition='right'
+                            placeholder='Например: 5 000'
+                            value={monthlyRepayment}
+                            onChange={this.handleMonthlyRepaymentChange}
                         />
                     </Form.Field>
                     {showCalculateButton && (
@@ -155,6 +207,11 @@ export class CalculatorPage extends React.Component {
      */
     renderResultPanel() {
         const {calculator} = this.state;
+        const totalAmount = calculator.getTotalAmount();
+        const creditAmount = calculator.getCreditAmount();
+        const monthsCount = calculator.getMonthsCount();
+        const totalPercents = totalAmount - creditAmount;
+
 
         return (
             <Segment>
@@ -162,7 +219,15 @@ export class CalculatorPage extends React.Component {
                     <Table.Body>
                         <Table.Row>
                             <Table.Cell>Общая сумма выплат:</Table.Cell>
-                            <Table.Cell>{formatAmount(calculator.getTotalAmount())}</Table.Cell>
+                            <Table.Cell>{formatAmount(totalAmount)}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell>Из них процентов:</Table.Cell>
+                            <Table.Cell>{formatAmount(totalPercents)}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell>Срок ипотеки (в месяцах):</Table.Cell>
+                            <Table.Cell>{`${monthsCount} (${Math.floor(monthsCount / 12)} лет)`}</Table.Cell>
                         </Table.Row>
                     </Table.Body>
                 </Table>
@@ -181,6 +246,11 @@ export class CalculatorPage extends React.Component {
         for (let i = 0; i < calculator.getMonthsCount(); i++) {
             const payment = payments[i];
 
+            const repaymentInMonth = payment.repayments.length > 0 ?
+                payment.repayments[0][formatAmount(payment.date)] :
+                0
+            ;
+
             rows.push(
                 <Table.Row key={payment.date}>
                     <Table.Cell>{payment.number}</Table.Cell>
@@ -188,6 +258,7 @@ export class CalculatorPage extends React.Component {
                     <Table.Cell>{formatAmount(payment.amount)}</Table.Cell>
                     <Table.Cell>{formatAmount(payment.percents)}</Table.Cell>
                     <Table.Cell>{formatAmount(payment.bodyPayment)}</Table.Cell>
+                    <Table.Cell>{formatAmount(repaymentInMonth)}</Table.Cell>
                     <Table.Cell>{formatAmount(payment.currentCreditBody)}</Table.Cell>
                 </Table.Row>
             );
@@ -209,6 +280,7 @@ export class CalculatorPage extends React.Component {
                         <Table.HeaderCell>Сумма платежа</Table.HeaderCell>
                         <Table.HeaderCell>Проценты за текущий месяц</Table.HeaderCell>
                         <Table.HeaderCell>Плата в счёт тела кредита</Table.HeaderCell>
+                        <Table.HeaderCell>Сумма досрочного погашения в этом месяце</Table.HeaderCell>
                         <Table.HeaderCell>Тело кредита</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
