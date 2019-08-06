@@ -1,10 +1,9 @@
 import React from 'react';
-import { Button, Form, Popup, Icon, Input } from 'semantic-ui-react';
-import { Table, Segment } from 'semantic-ui-react';
+import {Button, Form, Icon, Input, Popup, Segment, Table} from 'semantic-ui-react';
 import DatePicker from "react-datepicker";
+import {formatAmount, formatDate} from '../Utils/Utils';
+import {Calculator} from '../Models/Calculator';
 import "react-datepicker/dist/react-datepicker.css";
-import { formatDate, formatAmount } from '../Utils/Utils';
-import { Calculator } from '../Models/Calculator';
 
 /**
  * http://mobile-testing.ru/loancalc/rachet_dosrochnogo_pogashenia/
@@ -26,23 +25,23 @@ export class CalculatorPage extends React.Component {
             // Значение инпута Дата платежа
             startDate: new Date(),
             // Значение инпута Сумма ежемесячного досрочного погашения
-            monthlyRepayment : 0,
+            monthlyRepayment: 0,
 
             showCalculateButton: false,
             showResult: false
-        }
+        };
     }
 
     /**
      * Вычисляет необходимость отображения кнопки "Рассчитать".
      */
     checkCalculateButtonVisbility() {
-        const { rate, creditAmount, monthsCount, startDate } = this.state;
+        const {rate, creditAmount, monthsCount, startDate} = this.state;
 
         if (rate !== '' && creditAmount !== '' && monthsCount !== '' && startDate !== '') {
             this.setState({
                 showCalculateButton: true
-            })
+            });
         }
     }
 
@@ -136,7 +135,7 @@ export class CalculatorPage extends React.Component {
                     <Form.Field>
                         <label>Сумма кредита:</label>
                         <Input
-                            label={{ basic: true, content: '₽' }}
+                            label={{basic: true, content: '₽'}}
                             labelPosition='right'
                             placeholder='Например: 2 500 000'
                             value={creditAmount}
@@ -146,7 +145,7 @@ export class CalculatorPage extends React.Component {
                     <Form.Field>
                         <label>Процентная ставка:</label>
                         <Input
-                            label={{ basic: true, content: '%' }}
+                            label={{basic: true, content: '%'}}
                             labelPosition='right'
                             placeholder='Например: 10,1'
                             value={rate}
@@ -156,9 +155,9 @@ export class CalculatorPage extends React.Component {
                     <Form.Field>
                         <label>Срок кредита (в месяцах):</label>
                         <Input
-                            label={!!monthsCount ? {
+                            label={monthsCount ? {
                                 basic: true,
-                                content: `${Math.floor(monthsCount/12)} лет`
+                                content: `${Math.floor(monthsCount / 12)} лет`
                             } : null}
                             // labelPosition='right'
                             placeholder="Например: 300"
@@ -179,10 +178,10 @@ export class CalculatorPage extends React.Component {
                             <Popup
                                 content='Сумма, которую вы будете вносить сверх ежемесячного платежа в день ежемесячного платежа'
                                 trigger={<Icon name='info circle' />}
-                             />
+                            />
                         </label>
                         <Input
-                            label={{ basic: true, content: '₽' }}
+                            label={{basic: true, content: '₽'}}
                             labelPosition='right'
                             placeholder='Например: 5 000'
                             value={monthlyRepayment}
@@ -249,7 +248,7 @@ export class CalculatorPage extends React.Component {
             const repaymentInMonth = payment.repayments.length > 0 ?
                 payment.repayments[0][formatAmount(payment.date)] :
                 0
-            ;
+                ;
 
             rows.push(
                 <Table.Row key={payment.date}>

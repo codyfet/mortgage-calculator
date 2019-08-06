@@ -1,0 +1,21 @@
+{
+    "parser": "babel-eslint",
+    "plugins": [
+        "react"
+    ],
+    "rules": {
+        "semi": ["error", "always"],
+        "object-curly-spacing": ["error", "never"],
+        "sort-imports": ["error", {
+            "ignoreDeclarationSort": true
+        }]
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended"
+    ],
+     "env": {
+         "browser": true,
+         "node": true
+     }
+}

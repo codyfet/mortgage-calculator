@@ -1,4 +1,4 @@
-import {getNumberDaysOfYear, getDifferenceDaysBetweenDates, formatAmount} from '../Utils/Utils';
+import {formatAmount, getDifferenceDaysBetweenDates, getNumberDaysOfYear} from '../Utils/Utils';
 
 /**
  * Класс Калькулятор ипотеки.
@@ -102,7 +102,7 @@ export class Calculator {
             const currentCreditBody = (i === 0) ? creditAmount : payments[i - 1].currentCreditBody;
             const percents = this._calculatePercentsForMonth(currentCreditBody, paymentDate);
             const bodyPayment = paymentAmount - percents;
-            const newCurrentCreditBody = currentCreditBody - bodyPayment;
+            let newCurrentCreditBody = currentCreditBody - bodyPayment;
 
             // Уменьшаем оставшееся тело кредита на сумму досрочного погашения за этот месяц.
             if (i > 0 && payments[i - 1].repayments.length > 0) {
