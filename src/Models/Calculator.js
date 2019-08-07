@@ -1,9 +1,18 @@
+// @flow
 import {formatAmount, getDifferenceDaysBetweenDates, getNumberDaysOfYear} from '../Utils/Utils';
 
 /**
  * Класс Калькулятор ипотеки.
  */
 export class Calculator {
+    creditAmount: number;
+    rate: number;
+    monthsCount: number;
+    startDate: Date;
+    monthlyRepayment: number;
+    paymentAmount: number;
+    payments: Array<Object>;
+
     /**
      * @param {number} creditAmount Сумма кредита в рублях.
      * @param {number} rate Процентная ставка (в целом виде, например: 12)
@@ -11,7 +20,13 @@ export class Calculator {
      * @param {Date} startDate Дата первого ежемесячного платежа.
      * @param {number} [monthlyRepayment] Сумма ежемесячного досрочного погашения.
      */
-    constructor(creditAmount, rate, monthsCount, startDate, monthlyRepayment) {
+    constructor(
+        creditAmount: number,
+        rate: number,
+        monthsCount: number,
+        startDate: Date,
+        monthlyRepayment: number
+    ) {
         this.creditAmount = creditAmount;
         this.rate = rate;
         this.monthsCount = monthsCount;
@@ -21,7 +36,7 @@ export class Calculator {
         this.payments = this._calculatePayments();
     }
 
-    getCreditAmount () {
+    getCreditAmount (): number {
         return this.creditAmount;
     }
 
@@ -29,35 +44,40 @@ export class Calculator {
      * Возвращает годовую процентную ставку (без пересчёта на сотые доли).
      * Пример возвращаемого значения: 11.
      */
-    getRate () {
+    getRate (): number {
         return this.rate;
     }
 
-    getMonthsCount () {
+    getMonthsCount (): number {
         return this.monthsCount;
     }
 
-    _setMonthsCount (monthsCount) {
+    /**
+     * Устанавливает новое значение для количества месяцев ипотеки.
+     *
+     * @param {number} monthsCount Устанавливаемое количество месяцев.
+     */
+    _setMonthsCount (monthsCount: number): void {
         this.monthsCount = monthsCount;
     }
 
-    getStartDate () {
+    getStartDate (): Date {
         return this.startDate;
     }
 
-    getMonthlyRepayment () {
+    getMonthlyRepayment (): number {
         return this.monthlyRepayment;
     }
 
-    getPaymentAmount () {
+    getPaymentAmount (): number {
         return this.paymentAmount;
     }
 
-    getTotalAmount () {
+    getTotalAmount (): number {
         return this.getPaymentAmount() * this.getMonthsCount();
     }
 
-    getPayments () {
+    getPayments (): Array<Object> {
         return this.payments;
     }
 
@@ -66,14 +86,14 @@ export class Calculator {
      * Умножаем на 0.01, чтобы преобразовать к сотым долям: 11 % => 0.11 %
      * Т.к. указана годовая ставка, необходимо разделить её на 12, чтобы получить ставку в месяц.
      */
-    getFractionalMonthRate () {
+    getFractionalMonthRate (): number {
         return (this.getRate() * 0.01) / 12;
     }
 
     /**
      * Расчитывает ежемесячный платёж.
      */
-    _calculatePaymentAmount () {
+    _calculatePaymentAmount (): number {
         const i = this.getFractionalMonthRate();
         const n = this.getMonthsCount();
         const a = this.getCreditAmount();
@@ -88,9 +108,9 @@ export class Calculator {
     }
 
     /**
-     * Расчитывает поддробную информацию по каждому платежу.
+     * Расчитывает и возвращает подробную информацию по каждому платежу.
      */
-    _calculatePayments () {
+    _calculatePayments (): Array<Object> {
         const payments = [];
         const startDate = this.getStartDate();
         const creditAmount = this.getCreditAmount();
@@ -135,12 +155,12 @@ export class Calculator {
     }
 
     /**
-     * Расчитывает сумму процентов в конкретный месяц.
+     * Расчитывает и возвращает сумму процентов в конкретный месяц.
      *
      * @param {number} currentCreditBody Оставшееся тело кредита.
      * @param {Date} currentDate Дата ежемесячного платежа (в месяце, для которого расчитываем проценты).
      */
-    _calculatePercentsForMonth (currentCreditBody, currentDate) {
+    _calculatePercentsForMonth (currentCreditBody: number, currentDate: Date): number {
         let percents = null;
         const currentYear = currentDate.getFullYear();
 

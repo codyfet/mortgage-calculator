@@ -1,32 +1,53 @@
-import React from 'react';
+// @flow
+import * as React from 'react';
 import {Button, Form, Icon, Input, Popup, Segment, Table} from 'semantic-ui-react';
 import DatePicker from "react-datepicker";
 import {formatAmount, formatDate} from '../Utils/Utils';
 import {Calculator} from '../Models/Calculator';
 import "react-datepicker/dist/react-datepicker.css";
 
-/**
- * http://mobile-testing.ru/loancalc/rachet_dosrochnogo_pogashenia/
- */
-export class CalculatorPage extends React.Component {
+type Props = {
 
-    constructor(props) {
+};
+
+/**
+ * @property {bject} calculator Инстанс калькулятора.
+ * @property {string} creditAmount Значение инпута Сумма кредита.
+ * @property {string} rate Значение инпута Процентная ставка.
+ * @property {string} monthsCount Значение инпута Количество месяцев.
+ * @property {Date} startDate Значение инпута Дата платежа.
+ * @property {string} monthlyRepayment Значение инпута Сумма ежемесячного досрочного погашения.
+ * @property {boolean} showCalculateButton Признак отоборажения кнопки "Рассчитать".
+ * @property {boolean} showResult Признако отображения результатов расчетов..
+ */
+type State = {
+    calculator: Object;
+    creditAmount: string;
+    rate: string;
+    monthsCount: string;
+    startDate: Date;
+    monthlyRepayment: string;
+    showCalculateButton: boolean;
+    showResult: boolean;
+};
+
+/**
+ * Компонент Страница с ипотечным калькулятором.
+ *
+ * Формула и описание можно помотерть здесь http://mobile-testing.ru/loancalc/rachet_dosrochnogo_pogashenia/.
+ */
+export class CalculatorPage extends React.Component<Props, State> {
+
+    constructor(props: Props) {
         super(props);
 
         this.state = {
-            // Инстанс калькулятора
             calculator: null,
-            // Значение инпута Сумма кредита
             creditAmount: '',
-            // Значение инпута Процентная ставка
             rate: '',
-            // Значение инпута Количество месяцев
             monthsCount: '',
-            // Значение инпута Дата платежа
             startDate: new Date(),
-            // Значение инпута Сумма ежемесячного досрочного погашения
-            monthlyRepayment: 0,
-
+            monthlyRepayment: '0',
             showCalculateButton: false,
             showResult: false
         };
@@ -35,7 +56,7 @@ export class CalculatorPage extends React.Component {
     /**
      * Вычисляет необходимость отображения кнопки "Рассчитать".
      */
-    checkCalculateButtonVisbility() {
+    checkCalculateButtonVisbility () {
         const {rate, creditAmount, monthsCount, startDate} = this.state;
 
         if (rate !== '' && creditAmount !== '' && monthsCount !== '' && startDate !== '') {
@@ -47,44 +68,52 @@ export class CalculatorPage extends React.Component {
 
     /**
      * Обработчик изменения значения в поле Сумма кредита.
+     *
+     * @param {SyntheticEvent<HTMLButtonElement>} event Событие.
      */
-    handleCreditAmountChange = (event) => {
+    handleCreditAmountChange = (event: SyntheticEvent<HTMLButtonElement>) => {
         this.setState({
-            creditAmount: event.target.value
+            creditAmount: event.currentTarget.value
         }, this.checkCalculateButtonVisbility);
     }
 
     /**
      * Обработчик изменения значения в поле Процентная ставка.
+     *
+     * @param {SyntheticEvent<HTMLButtonElement>} event Событие.
      */
-    handleRateChange = (event) => {
+    handleRateChange = (event: SyntheticEvent<HTMLButtonElement>) => {
         this.setState({
-            rate: event.target.value.replace(',', '.')
+            rate: event.currentTarget.value.replace(',', '.')
         }, this.checkCalculateButtonVisbility);
     }
 
     /**
      * Обработчик изменения значения в поле Количество месяцев.
+     *
+     * @param {SyntheticEvent<HTMLButtonElement>} event Событие.
      */
-    handleMonthsCountChange = (event) => {
+    handleMonthsCountChange = (event: SyntheticEvent<HTMLButtonElement>) => {
         this.setState({
-            monthsCount: event.target.value
+            monthsCount: event.currentTarget.value
         }, this.checkCalculateButtonVisbility);
     }
 
     /**
      * Обработчик изменения значения в поле Сумма ежемесячного досрочного погашения.
+     *
+     * @param {SyntheticEvent<HTMLButtonElement>} event Событие.
      */
-    handleMonthlyRepaymentChange = (event) => {
+    handleMonthlyRepaymentChange = (event: SyntheticEvent<HTMLButtonElement>) => {
         this.setState({
-            monthlyRepayment: event.target.value
+            monthlyRepayment: event.currentTarget.value
         });
     }
 
     /**
      * Обработчик изменения значения в поле Дата первого ежемесячного платежа.
      */
-    handleDateChange = (startDate) => {
+    handleDateChange = (startDate: Date) => {
         this.setState({
             startDate
         }, this.checkCalculateButtonVisbility);
@@ -102,7 +131,7 @@ export class CalculatorPage extends React.Component {
             monthlyRepayment = 0
         } = this.state;
 
-        const calculator = new Calculator(
+        const calculator: Calculator = new Calculator(
             parseFloat(creditAmount),
             parseFloat(rate),
             parseInt(monthsCount),
@@ -119,7 +148,7 @@ export class CalculatorPage extends React.Component {
     /**
      * Рисует панель с исходными данными.
      */
-    renderInputPanel() {
+    renderInputPanel () {
         const {
             rate,
             creditAmount,
@@ -157,7 +186,7 @@ export class CalculatorPage extends React.Component {
                         <Input
                             label={monthsCount ? {
                                 basic: true,
-                                content: `${Math.floor(monthsCount / 12)} лет`
+                                content: `${Math.floor(parseInt(monthsCount) / 12)} лет`
                             } : null}
                             // labelPosition='right'
                             placeholder="Например: 300"
@@ -204,7 +233,7 @@ export class CalculatorPage extends React.Component {
     /**
      * Рисует панель с результатами.
      */
-    renderResultPanel() {
+    renderResultPanel () {
         const {calculator} = this.state;
         const totalAmount = calculator.getTotalAmount();
         const creditAmount = calculator.getCreditAmount();
@@ -237,7 +266,7 @@ export class CalculatorPage extends React.Component {
     /**
      * Рисует строки таблицы с результатом.
      */
-    renderResultRows() {
+    renderResultRows () {
         const {calculator} = this.state;
         const payments = calculator.getPayments();
         const rows = [];
@@ -269,7 +298,7 @@ export class CalculatorPage extends React.Component {
     /**
      * Рисует таблицу с результатами.
      */
-    renderResultTable() {
+    renderResultTable () {
         return (
             <Table celled>
                 <Table.Header>
@@ -289,7 +318,7 @@ export class CalculatorPage extends React.Component {
         );
     }
 
-    render() {
+    render () {
         const {showResult} = this.state;
 
         return (

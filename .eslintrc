@@ -1,7 +1,8 @@
 {
     "parser": "babel-eslint",
     "plugins": [
-        "react"
+        "react",
+        "flowtype"
     ],
     "rules": {
         "semi": ["error", "always"],
@@ -12,10 +13,16 @@
     },
     "extends": [
         "eslint:recommended",
-        "plugin:react/recommended"
+        "plugin:react/recommended",
+        "plugin:flowtype/recommended"
     ],
-     "env": {
-         "browser": true,
-         "node": true
-     }
+    "env": {
+        "browser": true,
+        "node": true
+    },
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
+    }
 }
