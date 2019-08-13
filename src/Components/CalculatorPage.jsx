@@ -83,8 +83,14 @@ export class CalculatorPage extends React.Component<Props, State> {
      * @param {SyntheticEvent<HTMLButtonElement>} event Событие.
      */
     handleRateChange = (event: SyntheticEvent<HTMLButtonElement>) => {
+        const {value} = event.currentTarget;
+
+        if (isNaN(value)) {
+            return;
+        }
+
         this.setState({
-            rate: event.currentTarget.value.replace(',', '.')
+            rate: value
         }, this.checkCalculateButtonVisbility);
     }
 
@@ -146,6 +152,35 @@ export class CalculatorPage extends React.Component<Props, State> {
     }
 
     /**
+     * Рисует сайдбар.
+     */
+    renderSidebar () {
+        return (
+            <div className="sidebar">
+                {/* Блок для ввода значений */}
+                {this.renderInputPanel()}
+            </div>
+        );
+    }
+
+    /**
+     * Рисует блок с таблицей.
+     */
+    renderTableView () {
+        const {showResult} = this.state;
+
+        return (
+            <div className="tableview">
+                {/* Панель с результатом */}
+                {showResult && this.renderResultPanel()}
+
+                {/* Таблица с результатом */}
+                {showResult && this.renderResultTable()}
+            </div>
+        );
+    }
+
+    /**
      * Рисует панель с исходными данными.
      */
     renderInputPanel () {
@@ -161,51 +196,51 @@ export class CalculatorPage extends React.Component<Props, State> {
         return (
             <Segment>
                 <Form>
-                    <Form.Field>
-                        <label>Сумма кредита:</label>
+                    <Form.Field required>
+                        <label>Сумма кредита</label>
                         <Input
                             label={{basic: true, content: '₽'}}
                             labelPosition='right'
-                            placeholder='Например: 2 500 000'
+                            placeholder='Введите сумму'
                             value={creditAmount}
                             onChange={this.handleCreditAmountChange}
                         />
                     </Form.Field>
-                    <Form.Field>
-                        <label>Процентная ставка:</label>
+                    <Form.Field required>
+                        <label>Процентная ставка</label>
                         <Input
                             label={{basic: true, content: '%'}}
                             labelPosition='right'
-                            placeholder='Например: 10,1'
+                            placeholder='Введите ставку'
                             value={rate}
                             onChange={this.handleRateChange}
                         />
                     </Form.Field>
-                    <Form.Field>
-                        <label>Срок кредита (в месяцах):</label>
+                    <Form.Field required>
+                        <label>Срок кредита (в месяцах)</label>
                         <Input
-                            label={monthsCount ? {
-                                basic: true,
-                                content: `${Math.floor(parseInt(monthsCount) / 12)} лет`
-                            } : null}
-                            // labelPosition='right'
-                            placeholder="Например: 300"
+                            // label={monthsCount ? {
+                            //     basic: true,
+                            //     content: `${Math.floor(parseInt(monthsCount) / 12)} лет`
+                            // } : null}
+                            placeholder="Введите срок"
                             value={monthsCount}
                             onChange={this.handleMonthsCountChange}
                         />
                     </Form.Field>
-                    <Form.Field>
-                        <label>Дата первого платежа:</label>
+                    <Form.Field required>
+                        <label>Дата первого платежа</label>
                         <DatePicker
+                            dateFormat="dd/MM/yyyy"
                             selected={startDate}
                             onChange={this.handleDateChange}
                         />
                     </Form.Field>
                     <Form.Field>
                         <label>
-                            Сумма ежемесячного досрочного погашения:
+                            Сумма ежемесячного досрочного погашения
                             <Popup
-                                content='Сумма, которую вы будете вносить сверх ежемесячного платежа в день ежемесячного платежа'
+                                content='Сумма досрочного погашения, которую можно внести в день ежемесячного платежа'
                                 trigger={<Icon name='info circle' />}
                             />
                         </label>
@@ -300,37 +335,31 @@ export class CalculatorPage extends React.Component<Props, State> {
      */
     renderResultTable () {
         return (
-            <Table celled>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell>Номер платежа</Table.HeaderCell>
-                        <Table.HeaderCell>Дата платежа</Table.HeaderCell>
-                        <Table.HeaderCell>Сумма платежа</Table.HeaderCell>
-                        <Table.HeaderCell>Проценты за текущий месяц</Table.HeaderCell>
-                        <Table.HeaderCell>Плата в счёт тела кредита</Table.HeaderCell>
-                        <Table.HeaderCell>Сумма досрочного погашения в этом месяце</Table.HeaderCell>
-                        <Table.HeaderCell>Тело кредита</Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
+            <Segment>
+                <Table celled>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>Номер платежа</Table.HeaderCell>
+                            <Table.HeaderCell>Дата платежа</Table.HeaderCell>
+                            <Table.HeaderCell>Сумма платежа</Table.HeaderCell>
+                            <Table.HeaderCell>Проценты за текущий месяц</Table.HeaderCell>
+                            <Table.HeaderCell>Плата в счёт тела кредита</Table.HeaderCell>
+                            <Table.HeaderCell>Сумма досрочного погашения в этом месяце</Table.HeaderCell>
+                            <Table.HeaderCell>Тело кредита</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
 
-                <Table.Body>{this.renderResultRows()}</Table.Body>
-            </Table>
+                    <Table.Body>{this.renderResultRows()}</Table.Body>
+                </Table>
+            </Segment>
         );
     }
 
     render () {
-        const {showResult} = this.state;
-
         return (
             <div className="calculator-page">
-                {/* Блок для ввода значений */}
-                {this.renderInputPanel()}
-
-                {/* Панель с результатом */}
-                {showResult && this.renderResultPanel()}
-
-                {/* Таблица с результатом */}
-                {showResult && this.renderResultTable()}
+                {this.renderSidebar()}
+                {this.renderTableView()}
             </div>
         );
     }
