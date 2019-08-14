@@ -18,14 +18,23 @@ div.ui.segment {
     box-shadow: 0 24px 60px 0 rgba(0, 0, 0, 0.12);
     border-radius: 0;
     border: 0;
-    padding: 20px 20px 40px 20px;
+    padding: 20px;
 }
 
 .labeled {
     .ui.basic.label.label {
         width: 40px;
         text-align: center;
+        border-radius: 0;
     }
+}
+
+.ui.celled.table {
+    border-radius: 0;
+}
+
+input {
+    border-radius: 0 !important;
 }
 
 // Страницы
@@ -40,5 +49,13 @@ div.ui.segment {
 
     .tableview {
         padding: 30px 60px 30px 0;
+
+        th:first-child {
+            width: 10%;
+        }
+
+        th {
+            width: 15%;
+        }
     }
 }

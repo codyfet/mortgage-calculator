@@ -339,7 +339,7 @@ export class CalculatorPage extends React.Component<Props, State> {
                 <Table celled>
                     <Table.Header>
                         <Table.Row>
-                            <Table.HeaderCell>Номер платежа</Table.HeaderCell>
+                            <Table.HeaderCell>№</Table.HeaderCell>
                             <Table.HeaderCell>Дата платежа</Table.HeaderCell>
                             <Table.HeaderCell>Сумма платежа</Table.HeaderCell>
                             <Table.HeaderCell>Проценты за текущий месяц</Table.HeaderCell>
