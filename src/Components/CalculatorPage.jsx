@@ -3,6 +3,7 @@ import * as React from 'react';
 import {Button, Form, Icon, Input, Popup, Segment, Table} from 'semantic-ui-react';
 import DatePicker from "react-datepicker";
 import {formatAmount, formatDate} from '../Utils/Utils';
+import {getRepaymentsMonthTotal} from '../Utils/BusinessUtils';
 import {Calculator} from '../Models/Calculator';
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -112,7 +113,7 @@ export class CalculatorPage extends React.Component<Props, State> {
      */
     handleMonthlyRepaymentChange = (event: SyntheticEvent<HTMLButtonElement>) => {
         this.setState({
-            monthlyRepayment: event.currentTarget.value
+            monthlyRepayment: event.currentTarget.value || "0"
         });
     }
 
@@ -273,8 +274,9 @@ export class CalculatorPage extends React.Component<Props, State> {
         const totalAmount = calculator.getTotalAmount();
         const creditAmount = calculator.getCreditAmount();
         const monthsCount = calculator.getMonthsCount();
+        const paymentAmount = calculator.getPaymentAmount();
+        const monthlyRepayment = calculator.getMonthlyRepayment();
         const totalPercents = totalAmount - creditAmount;
-
 
         return (
             <Segment>
@@ -289,8 +291,12 @@ export class CalculatorPage extends React.Component<Props, State> {
                             <Table.Cell>{formatAmount(totalPercents)}</Table.Cell>
                         </Table.Row>
                         <Table.Row>
-                            <Table.Cell>Срок ипотеки (в месяцах):</Table.Cell>
-                            <Table.Cell>{`${monthsCount} (${Math.floor(monthsCount / 12)} лет)`}</Table.Cell>
+                            <Table.Cell>Срок ипотеки:</Table.Cell>
+                            <Table.Cell>{`${monthsCount} мес. (${Math.floor(monthsCount / 12)} лет)`}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell>Ежемесячный платёж:</Table.Cell>
+                            <Table.Cell>{formatAmount(paymentAmount + monthlyRepayment)}</Table.Cell>
                         </Table.Row>
                     </Table.Body>
                 </Table>
@@ -308,11 +314,7 @@ export class CalculatorPage extends React.Component<Props, State> {
 
         for (let i = 0; i < calculator.getMonthsCount(); i++) {
             const payment = payments[i];
-
-            const repaymentInMonth = payment.repayments.length > 0 ?
-                payment.repayments[0][formatAmount(payment.date)] :
-                0
-                ;
+            const repaymentInMonth = getRepaymentsMonthTotal(payment.repayments);
 
             rows.push(
                 <Table.Row key={payment.date}>

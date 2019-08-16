@@ -1,5 +1,7 @@
 // @flow
-import {formatAmount, getDifferenceDaysBetweenDates, getNumberDaysOfYear} from '../Utils/Utils';
+import {getDifferenceDaysBetweenDates, getNumberDaysOfYear} from '../Utils/Utils';
+import {getRepaymentsMonthTotal} from '../Utils/BusinessUtils';
+import type {Payment} from './Models';
 
 /**
  * Класс Калькулятор ипотеки.
@@ -11,7 +13,7 @@ export class Calculator {
     startDate: Date;
     monthlyRepayment: number;
     paymentAmount: number;
-    payments: Array<Object>;
+    payments: Payment[];
 
     /**
      * @param {number} creditAmount Сумма кредита в рублях.
@@ -73,11 +75,32 @@ export class Calculator {
         return this.paymentAmount;
     }
 
+    /**
+     * Возвращает общую сумму выплат за весь период кредита.
+     */
     getTotalAmount (): number {
-        return this.getPaymentAmount() * this.getMonthsCount();
+        const payments: Payment[] = this.getPayments();
+        let totalAmount: number = 0;
+
+        /**
+         * Цикл по месяцам.
+         */
+        payments.forEach((payment: Payment) => {
+            /**
+             * Прибавляем ежемесячный платёж (тело кредита + проценты за месяц).
+             */
+            totalAmount += payment.amount;
+
+            /**
+             * Прибавляем все досрочные платежи, какие были в этом месяце.
+             */
+            totalAmount += getRepaymentsMonthTotal(payment.repayments);
+        });
+
+        return totalAmount;
     }
 
-    getPayments (): Array<Object> {
+    getPayments (): Object[] {
         return this.payments;
     }
 
@@ -110,12 +133,12 @@ export class Calculator {
     /**
      * Расчитывает и возвращает подробную информацию по каждому платежу.
      */
-    _calculatePayments (): Array<Object> {
-        const payments = [];
-        const startDate = this.getStartDate();
-        const creditAmount = this.getCreditAmount();
-        const paymentAmount = this.getPaymentAmount();
-        const monthlyRepayment = this.getMonthlyRepayment();
+    _calculatePayments (): Payment[] {
+        const payments: Payment[] = [];
+        const startDate: Date = this.getStartDate();
+        const creditAmount: number = this.getCreditAmount();
+        const paymentAmount: number = this.getPaymentAmount();
+        const monthlyRepayment: number = this.getMonthlyRepayment();
 
         for (let i = 0; i < this.getMonthsCount(); i++) {
             const paymentDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + i));
@@ -137,7 +160,8 @@ export class Calculator {
                     percents: percents,
                     bodyPayment: bodyPayment,
                     repayments: [{
-                        [formatAmount(paymentDate)]: monthlyRepayment
+                        date: paymentDate,
+                        amount: monthlyRepayment
                     }],
                     currentCreditBody: newCurrentCreditBody
                 });
