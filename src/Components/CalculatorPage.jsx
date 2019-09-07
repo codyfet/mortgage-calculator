@@ -1,33 +1,51 @@
 // @flow
 import * as React from 'react';
+import {connect} from 'react-redux';
+import {initCalculation} from '../Actions/Actions';
 import {Button, Form, Icon, Input, Popup, Segment, Table} from 'semantic-ui-react';
 import DatePicker from "react-datepicker";
 import {formatAmount, formatDate} from '../Utils/Utils';
-import {getRepaymentsMonthTotal} from '../Utils/BusinessUtils';
-import {Calculator} from '../Models/Calculator';
+import {getRepaymentsMonthTotal, getTotalAmount} from '../Utils/BusinessUtils';
+import type {Dispatch, Payment, ReduxState} from '../Models/Models';
 import "react-datepicker/dist/react-datepicker.css";
 
-type Props = {
+type StateProps = {
+    creditAmount: number;
+    rate: number;
+    monthsCount: number;
+    startDate: Date;
+    defaultMonthlyRepayment: number;
+    paymentAmount: number;
+    payments: Payment[];
+}
 
-};
+type DispatchProps = {
+    initCalculation: (
+        creditAmount: number,
+        rate: number,
+        monthsCount: number,
+        startDate: Date,
+        defaultMonthlyRepayment: number
+    ) => void;
+}
+
+type TProps = StateProps & DispatchProps;
 
 /**
- * @property {bject} calculator Инстанс калькулятора.
  * @property {string} creditAmount Значение инпута Сумма кредита.
  * @property {string} rate Значение инпута Процентная ставка.
  * @property {string} monthsCount Значение инпута Количество месяцев.
  * @property {Date} startDate Значение инпута Дата платежа.
- * @property {string} monthlyRepayment Значение инпута Сумма ежемесячного досрочного погашения.
+ * @property {string} defaultMonthlyRepayment Значение инпута Сумма ежемесячного досрочного погашения.
  * @property {boolean} showCalculateButton Признак отоборажения кнопки "Рассчитать".
- * @property {boolean} showResult Признако отображения результатов расчетов..
+ * @property {boolean} showResult Признако отображения результатов расчетов.
  */
 type State = {
-    calculator: Object;
     creditAmount: string;
     rate: string;
     monthsCount: string;
     startDate: Date;
-    monthlyRepayment: string;
+    defaultMonthlyRepayment: string;
     showCalculateButton: boolean;
     showResult: boolean;
 };
@@ -37,18 +55,17 @@ type State = {
  *
  * Формула и описание можно помотерть здесь http://mobile-testing.ru/loancalc/rachet_dosrochnogo_pogashenia/.
  */
-export class CalculatorPage extends React.Component<Props, State> {
+export class CalculatorPage extends React.Component<TProps, State> {
 
-    constructor(props: Props) {
+    constructor(props: TProps) {
         super(props);
 
         this.state = {
-            calculator: null,
             creditAmount: '',
             rate: '',
             monthsCount: '',
             startDate: new Date(),
-            monthlyRepayment: '0',
+            defaultMonthlyRepayment: '0',
             showCalculateButton: false,
             showResult: false
         };
@@ -113,7 +130,7 @@ export class CalculatorPage extends React.Component<Props, State> {
      */
     handleMonthlyRepaymentChange = (event: SyntheticEvent<HTMLButtonElement>) => {
         this.setState({
-            monthlyRepayment: event.currentTarget.value || "0"
+            defaultMonthlyRepayment: event.currentTarget.value || "0"
         });
     }
 
@@ -135,22 +152,51 @@ export class CalculatorPage extends React.Component<Props, State> {
             rate,
             monthsCount,
             startDate,
-            monthlyRepayment = 0
+            defaultMonthlyRepayment = 0
         } = this.state;
 
-        const calculator: Calculator = new Calculator(
+        this.props.initCalculation(
             parseFloat(creditAmount),
             parseFloat(rate),
             parseInt(monthsCount),
             startDate,
-            parseFloat(monthlyRepayment)
+            parseFloat(defaultMonthlyRepayment)
         );
 
         this.setState({
-            calculator,
             showResult: true
         });
     }
+
+    /**
+     * Обработчик нажатия на кнопку "редактировать" в поле Сумма досрочного погашения в месяц.
+     *
+     * @param {SyntheticEvent<HTMLElement>} event Событие.
+     */
+    // handleEditRepaymentClick = (event: SyntheticEvent<HTMLElement>) => {
+    //     const editableRepaymentIndex: number = parseInt(event.target.closest('tr').getAttribute('index'));
+
+    //     this.setState({editableRepaymentIndex});
+    // }
+
+    /**
+     * Обработчик событя 'блюр' для инпут поля ввода досрочного платежа.
+     *
+     * @param {SyntheticEvent<HTMLInputElement>} event Событие.
+     */
+    // handleRepaymentFieldBlur = (event: SyntheticEvent<HTMLInputElement>) => {
+    //     const {updateRepaymentForMonth} = this.props;
+    //     const {editableRepaymentIndex} = this.state;
+    //     const {value} = event.currentTarget;
+
+    //     if (isNil(editableRepaymentIndex)) {
+    //         return;
+    //     }
+
+    //     this.setState({
+    //         editableRepaymentIndex: null
+    //     }, () => updateRepaymentForMonth(editableRepaymentIndex - 1, parseFloat(value)));
+    // }
 
     /**
      * Рисует сайдбар.
@@ -190,7 +236,7 @@ export class CalculatorPage extends React.Component<Props, State> {
             creditAmount,
             monthsCount,
             startDate,
-            monthlyRepayment,
+            defaultMonthlyRepayment,
             showCalculateButton,
         } = this.state;
 
@@ -220,10 +266,6 @@ export class CalculatorPage extends React.Component<Props, State> {
                     <Form.Field required>
                         <label>Срок кредита (в месяцах)</label>
                         <Input
-                            // label={monthsCount ? {
-                            //     basic: true,
-                            //     content: `${Math.floor(parseInt(monthsCount) / 12)} лет`
-                            // } : null}
                             placeholder="Введите срок"
                             value={monthsCount}
                             onChange={this.handleMonthsCountChange}
@@ -249,7 +291,7 @@ export class CalculatorPage extends React.Component<Props, State> {
                             label={{basic: true, content: '₽'}}
                             labelPosition='right'
                             placeholder='Например: 5 000'
-                            value={monthlyRepayment}
+                            value={defaultMonthlyRepayment}
                             onChange={this.handleMonthlyRepaymentChange}
                         />
                     </Form.Field>
@@ -270,13 +312,9 @@ export class CalculatorPage extends React.Component<Props, State> {
      * Рисует панель с результатами.
      */
     renderResultPanel () {
-        const {calculator} = this.state;
-        const totalAmount = calculator.getTotalAmount();
-        const creditAmount = calculator.getCreditAmount();
-        const monthsCount = calculator.getMonthsCount();
-        const paymentAmount = calculator.getPaymentAmount();
-        const monthlyRepayment = calculator.getMonthlyRepayment();
-        const totalPercents = totalAmount - creditAmount;
+        const {creditAmount, monthsCount, paymentAmount, defaultMonthlyRepayment, payments} = this.props;
+        const totalAmount: number = getTotalAmount(payments);
+        const totalPercents: number = totalAmount - creditAmount;
 
         return (
             <Segment>
@@ -296,7 +334,7 @@ export class CalculatorPage extends React.Component<Props, State> {
                         </Table.Row>
                         <Table.Row>
                             <Table.Cell>Ежемесячный платёж:</Table.Cell>
-                            <Table.Cell>{formatAmount(paymentAmount + monthlyRepayment)}</Table.Cell>
+                            <Table.Cell>{formatAmount(paymentAmount + defaultMonthlyRepayment)}</Table.Cell>
                         </Table.Row>
                     </Table.Body>
                 </Table>
@@ -308,22 +346,33 @@ export class CalculatorPage extends React.Component<Props, State> {
      * Рисует строки таблицы с результатом.
      */
     renderResultRows () {
-        const {calculator} = this.state;
-        const payments = calculator.getPayments();
+        const {monthsCount, payments} = this.props;
         const rows = [];
 
-        for (let i = 0; i < calculator.getMonthsCount(); i++) {
-            const payment = payments[i];
-            const repaymentInMonth = getRepaymentsMonthTotal(payment.repayments);
+        for (let i = 0; i < monthsCount; i++) {
+            const payment: Payment = payments[i];
+            const repaymentsInMonth: number = getRepaymentsMonthTotal(payment.repayments);
 
             rows.push(
-                <Table.Row key={payment.date}>
+                <Table.Row key={+payment.date} index={i} >
                     <Table.Cell>{payment.number}</Table.Cell>
                     <Table.Cell>{formatDate(payment.date)}</Table.Cell>
                     <Table.Cell>{formatAmount(payment.amount)}</Table.Cell>
                     <Table.Cell>{formatAmount(payment.percents)}</Table.Cell>
                     <Table.Cell>{formatAmount(payment.bodyPayment)}</Table.Cell>
-                    <Table.Cell>{formatAmount(repaymentInMonth)}</Table.Cell>
+                    <Table.Cell>{formatAmount(repaymentsInMonth)}</Table.Cell>
+                    {/* Редактируемое поле для изменения суммы досрочного платежа.
+                    <Table.Cell>
+                        <RepaymentCell
+                            disabled={i === 0}
+                            editable={isRepaymentEditable}
+                            repaymentsInMonth={repaymentsInMonth}
+                            prevPaymentDate={prevPaymentDate}
+                            onEditClick={this.handleEditRepaymentClick}
+                            onRepaymentBlur={this.handleRepaymentFieldBlur}
+                        />
+                    </Table.Cell>
+                     */}
                     <Table.Cell>{formatAmount(payment.currentCreditBody)}</Table.Cell>
                 </Table.Row>
             );
@@ -366,3 +415,35 @@ export class CalculatorPage extends React.Component<Props, State> {
         );
     }
 }
+
+const mapStateToProps = (state: ReduxState): StateProps => {
+    const {creditAmount, rate, monthsCount, startDate, defaultMonthlyRepayment, paymentAmount, payments} = state;
+
+    return {
+        creditAmount,
+        rate,
+        monthsCount,
+        startDate,
+        defaultMonthlyRepayment,
+        paymentAmount,
+        payments
+    };
+};
+
+const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
+    initCalculation: (
+        creditAmount: number,
+        rate: number,
+        monthsCount: number,
+        startDate: Date,
+        defaultMonthlyRepayment: number
+    ) => dispatch(initCalculation(
+        creditAmount,
+        rate,
+        monthsCount,
+        startDate,
+        defaultMonthlyRepayment
+    ))
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(CalculatorPage);

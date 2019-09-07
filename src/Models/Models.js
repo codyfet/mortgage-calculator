@@ -32,3 +32,29 @@ export type Repayment = {
     date: Date;
     amount: number;
 }
+
+/**
+ * Тип, описывающий redux дерево
+ */
+export type ReduxState = {
+    +creditAmount: ?number;
+    +rate: ?number;
+    +monthsCount: ?number;
+    +startDate: ?Date;
+    +defaultMonthlyRepayment: ?number;
+    +paymentAmount: ?number;
+    +payments: Payment[];
+}
+
+/**
+ * Тип, описывающий redux экшен.
+ */
+export type Action = {
+    +type: string,
+    +payload: Object
+};
+
+/**
+ * Тип, описывающий dispatch функцию.
+ */
+export type Dispatch = (action: Action) => any;

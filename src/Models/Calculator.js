@@ -5,13 +5,14 @@ import type {Payment} from './Models';
 
 /**
  * Класс Калькулятор ипотеки.
+ * @Deprecated
  */
 export class Calculator {
     creditAmount: number;
     rate: number;
     monthsCount: number;
     startDate: Date;
-    monthlyRepayment: number;
+    defaultMonthlyRepayment: number;
     paymentAmount: number;
     payments: Payment[];
 
@@ -20,20 +21,20 @@ export class Calculator {
      * @param {number} rate Процентная ставка (в целом виде, например: 12)
      * @param {number} monthsCount Количество месяцев, на которые берется кредит.
      * @param {Date} startDate Дата первого ежемесячного платежа.
-     * @param {number} [monthlyRepayment] Сумма ежемесячного досрочного погашения.
+     * @param {number} [defaultMonthlyRepayment] Сумма ежемесячного досрочного погашения (по умолчанию применяется ко всем выплатам).
      */
     constructor(
         creditAmount: number,
         rate: number,
         monthsCount: number,
         startDate: Date,
-        monthlyRepayment: number
+        defaultMonthlyRepayment: number
     ) {
         this.creditAmount = creditAmount;
         this.rate = rate;
         this.monthsCount = monthsCount;
         this.startDate = startDate;
-        this.monthlyRepayment = monthlyRepayment;
+        this.defaultMonthlyRepayment = defaultMonthlyRepayment;
         this.paymentAmount = this._calculatePaymentAmount();
         this.payments = this._calculatePayments();
     }
@@ -67,8 +68,8 @@ export class Calculator {
         return this.startDate;
     }
 
-    getMonthlyRepayment (): number {
-        return this.monthlyRepayment;
+    getDefaultMonthlyRepayment (): number {
+        return this.defaultMonthlyRepayment;
     }
 
     getPaymentAmount (): number {
@@ -114,6 +115,21 @@ export class Calculator {
     }
 
     /**
+     * Обновляет сумму досрочного платежа для конкретного месяца.
+     *
+     * @param {number} index Порядковый индекс в массиве платежей (номер ежемесячной выплаты).
+     * @param {number} newRepayment Новое значение досрочного платежа, которое необходимо установить.
+     */
+    updateRepaymentForMonth (index: number, newRepayment: number): void {
+        const payments: Payment[] = this.getPayments();
+        const paymentToUpdate: Payment = payments[index];
+
+        paymentToUpdate.repayments[0].amount = newRepayment;
+
+        this._calculatePayments();
+    }
+
+    /**
      * Расчитывает ежемесячный платёж.
      */
     _calculatePaymentAmount (): number {
@@ -138,7 +154,7 @@ export class Calculator {
         const startDate: Date = this.getStartDate();
         const creditAmount: number = this.getCreditAmount();
         const paymentAmount: number = this.getPaymentAmount();
-        const monthlyRepayment: number = this.getMonthlyRepayment();
+        const defaultMonthlyRepayment: number = this.getDefaultMonthlyRepayment();
 
         for (let i = 0; i < this.getMonthsCount(); i++) {
             const paymentDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + i));
@@ -147,8 +163,14 @@ export class Calculator {
             const bodyPayment = paymentAmount - percents;
             let newCurrentCreditBody = currentCreditBody - bodyPayment;
 
+            const prevPayment: Payment = payments[i - 1];
+            const monthlyRepayment: number = (prevPayment && prevPayment.repayments[0].amount !== defaultMonthlyRepayment) ?
+                prevPayment.repayments[0].amount :
+                defaultMonthlyRepayment
+            ;
+
             // Уменьшаем оставшееся тело кредита на сумму досрочного погашения за этот месяц.
-            if (i > 0 && payments[i - 1].repayments.length > 0) {
+            if (i > 0 && prevPayment.repayments.length > 0) {
                 newCurrentCreditBody = newCurrentCreditBody - monthlyRepayment;
             }
 
