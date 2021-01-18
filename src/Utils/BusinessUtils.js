@@ -55,12 +55,13 @@ export function calculatePayments (
     rate: number
 ): Payment[] {
     const payments: Payment[] = [];
+    const firstPaymentDate = new Date(startDate.setMonth(1));
 
     for (let i = 0; i < monthsCount; i++) {
-        const paymentDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + i));
+        const paymentDate = new Date(new Date(firstPaymentDate).setMonth(startDate.getMonth() + i));
         const currentCreditBody = (i === 0) ? creditAmount : payments[i - 1].currentCreditBody;
         const percents = calculatePercentsForMonth(currentCreditBody, paymentDate, rate);
-        const bodyPayment = paymentAmount - percents;
+        const bodyPayment = (paymentAmount < currentCreditBody ? paymentAmount - percents : currentCreditBody);
         let newCurrentCreditBody = currentCreditBody - bodyPayment;
 
         const prevPayment: Payment = payments[i - 1];
@@ -74,11 +75,11 @@ export function calculatePayments (
             newCurrentCreditBody = newCurrentCreditBody - monthlyRepayment;
         }
 
-        if (newCurrentCreditBody > 0) {
+        if (newCurrentCreditBody >= 0) {
             payments.push({
                 number: i + 1,
                 date: paymentDate,
-                amount: paymentAmount,
+                amount: bodyPayment + percents,
                 percents: percents,
                 bodyPayment: bodyPayment,
                 repayments: [{

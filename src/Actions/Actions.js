@@ -8,7 +8,7 @@ import {INIT_CALCULATION} from './ActionTypes';
  * @param {number} creditAmount Сумму кредита.
  * @param {number} rate Процентная ставка.
  * @param {number} monthsCount Количество месяцев (срок кредита).
- * @param {Date} startDate Дата первого платежа.
+ * @param {Date} startDate Дата открытия договора.
  * @param {number} defaultMonthlyRepayment Сумма досрочного погашения (дефолтная - применяется для каждого месяца).
  */
 export const initCalculation = (

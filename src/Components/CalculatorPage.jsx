@@ -35,7 +35,7 @@ type TProps = StateProps & DispatchProps;
  * @property {string} creditAmount Значение инпута Сумма кредита.
  * @property {string} rate Значение инпута Процентная ставка.
  * @property {string} monthsCount Значение инпута Количество месяцев.
- * @property {Date} startDate Значение инпута Дата платежа.
+ * @property {Date} startDate Значение инпута Дата открытия договора.
  * @property {string} defaultMonthlyRepayment Значение инпута Сумма ежемесячного досрочного погашения.
  * @property {boolean} showCalculateButton Признак отоборажения кнопки "Рассчитать".
  * @property {boolean} showResult Признако отображения результатов расчетов.
@@ -272,7 +272,7 @@ export class CalculatorPage extends React.Component<TProps, State> {
                         />
                     </Form.Field>
                     <Form.Field required>
-                        <label>Дата первого платежа</label>
+                        <label>Дата открытия договора</label>
                         <DatePicker
                             dateFormat="dd/MM/yyyy"
                             selected={startDate}
