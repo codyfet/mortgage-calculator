@@ -45,6 +45,13 @@ export function calculatePaymentAmount (rate: number, monthsCount: number, credi
 
 /**
  * Расчитывает и возвращает подробную информацию по каждому платежу.
+ *
+ * @param startDate Дата открытия договора.
+ * @param creditAmount Сумма кредита.
+ * @param paymentAmount Сумма ежемесячного платежа.
+ * @param defaultMonthlyRepayment Сумма ежемесячного досрочного погашения.
+ * @param monthsCount Количетсво месяцев, на которые взят кредит.
+ * @param rate Ставка.
  */
 export function calculatePayments (
     startDate: Date,
