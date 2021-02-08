@@ -1,5 +1,5 @@
 //@flow
-import type {Payment, Repayment} from '../Models/Models';
+import type {/*Day,*/ Payment, Repayment} from '../Models/Models';
 import {getDifferenceDaysBetweenDates, getNumberDaysOfYear} from './Utils';
 
 /**
@@ -82,6 +82,25 @@ export function calculatePayments (
             newCurrentCreditBody = newCurrentCreditBody - monthlyRepayment;
         }
 
+        /**
+         * Это черновик для вывода данных о днях.
+         */
+        // const daysCount = !prevPayment ? 0 : getDifferenceDaysBetweenDates(prevPayment.date, paymentDate);
+
+        // const prevPaymentDate = new Date(new Date().setMonth((paymentDate.getMonth() - 1)));
+        // const daysCount = getDifferenceDaysBetweenDates(prevPaymentDate, paymentDate);
+        // const percentsPerDay = percents / daysCount;
+        // const days: Day[] = [];
+
+        // for (let i = 1; i <= daysCount; i++) {
+        //     days.push({
+        //         number: i,
+        //         percentsPerDay,
+        //         percentsByDay: i === 1 ? percentsPerDay : days[i - 2].percentsByDay + percentsPerDay
+        //     });
+        // }
+        // console.log('days', days);
+
         if (newCurrentCreditBody >= 0) {
             payments.push({
                 number: i + 1,
@@ -93,6 +112,7 @@ export function calculatePayments (
                     date: paymentDate,
                     amount: monthlyRepayment
                 }],
+                // days,
                 currentCreditBody: newCurrentCreditBody
             });
         } else {

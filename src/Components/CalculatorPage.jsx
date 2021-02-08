@@ -353,6 +353,29 @@ export class CalculatorPage extends React.Component<TProps, State> {
             const payment: Payment = payments[i];
             const repaymentsInMonth: number = getRepaymentsMonthTotal(payment.repayments);
 
+            /**
+             * Это черновик для вывода данных о днях.
+             */
+            /*
+            const days = payment.days;
+
+            for (let y = 0; y < days.length; y++) {
+                const day = days[y];
+
+                rows.push(
+                    <Table.Row key={`${+payment.date}__${day.number}`}>
+                        <Table.Cell>{`${payment.number} - ${day.number}`}</Table.Cell>
+                        <Table.Cell>{day.number}</Table.Cell>
+                        <Table.Cell>{formatAmount(day.percentsPerDay)}</Table.Cell>
+                        <Table.Cell>{0}</Table.Cell>
+                        <Table.Cell>{formatAmount(day.percentsByDay)}</Table.Cell>
+                        <Table.Cell>{0}</Table.Cell>
+                        <Table.Cell>{formatAmount(payment.currentCreditBody)}</Table.Cell>
+                    </Table.Row>
+                );
+            }
+            */
+
             rows.push(
                 <Table.Row key={+payment.date} index={i} >
                     <Table.Cell>{payment.number}</Table.Cell>
