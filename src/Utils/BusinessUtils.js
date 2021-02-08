@@ -64,27 +64,28 @@ export function calculatePayments (
     const payments: Payment[] = [];
     const firstPaymentDate = new Date(startDate.setMonth(1));
 
-    for (let i = 0; i < monthsCount; i++) {
+    for (let i = 1; i <= monthsCount; i++) {
+        const isFirstPayment = i === 1;
         const paymentDate = new Date(new Date(firstPaymentDate).setMonth(startDate.getMonth() + i));
-        const currentCreditBody = (i === 0) ? creditAmount : payments[i - 1].currentCreditBody;
+        const prevPayment: Payment = isFirstPayment ? null : payments[i - 2];
+        const currentCreditBody = isFirstPayment ? creditAmount : prevPayment.currentCreditBody;
         const percents = calculatePercentsForMonth(currentCreditBody, paymentDate, rate);
         const bodyPayment = (paymentAmount < currentCreditBody ? paymentAmount - percents : currentCreditBody);
         let newCurrentCreditBody = currentCreditBody - bodyPayment;
 
-        const prevPayment: Payment = payments[i - 1];
         const monthlyRepayment: number = (prevPayment && prevPayment.repayments[0].amount !== defaultMonthlyRepayment) ?
             prevPayment.repayments[0].amount :
             defaultMonthlyRepayment
             ;
 
         // Уменьшаем оставшееся тело кредита на сумму досрочного погашения за этот месяц.
-        if (i > 0 && prevPayment.repayments.length > 0) {
+        if (i > 1 && prevPayment.repayments.length > 0) {
             newCurrentCreditBody = newCurrentCreditBody - monthlyRepayment;
         }
 
         if (newCurrentCreditBody >= 0) {
             payments.push({
-                number: i + 1,
+                number: i,
                 date: paymentDate,
                 amount: bodyPayment + percents,
                 percents: percents,
