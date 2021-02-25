@@ -2,10 +2,10 @@
 import * as React from 'react';
 import {connect} from 'react-redux';
 import {initCalculation} from '../Actions/Actions';
-import {Button, Form, Icon, Input, Popup, Segment, Table} from 'semantic-ui-react';
+import {Button, Form, Input, Segment, Table} from 'semantic-ui-react';
 import DatePicker from "react-datepicker";
 import {formatAmount, formatDate} from '../Utils/Utils';
-import {getRepaymentsMonthTotal, getTotalAmount} from '../Utils/BusinessUtils';
+import {getTotalAmount} from '../Utils/BusinessUtils';
 import type {Dispatch, Payment, ReduxState} from '../Models/Models';
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -236,7 +236,6 @@ export class CalculatorPage extends React.Component<TProps, State> {
             creditAmount,
             monthsCount,
             startDate,
-            defaultMonthlyRepayment,
             showCalculateButton,
         } = this.state;
 
@@ -279,6 +278,7 @@ export class CalculatorPage extends React.Component<TProps, State> {
                             onChange={this.handleDateChange}
                         />
                     </Form.Field>
+                    {/*
                     <Form.Field>
                         <label>
                             Сумма ежемесячного досрочного погашения
@@ -295,6 +295,7 @@ export class CalculatorPage extends React.Component<TProps, State> {
                             onChange={this.handleMonthlyRepaymentChange}
                         />
                     </Form.Field>
+                    */}
                     {showCalculateButton && (
                         <Button
                             type='submit'
@@ -326,10 +327,14 @@ export class CalculatorPage extends React.Component<TProps, State> {
                         </Table.Row>
                         <Table.Row>
                             <Table.Cell>Из них процентов:</Table.Cell>
-                            <Table.Cell>{formatAmount(totalPercents)}</Table.Cell>
+                            <Table.Cell><span className="red">{formatAmount(totalPercents)}</span></Table.Cell>
                         </Table.Row>
                         <Table.Row>
-                            <Table.Cell>Срок ипотеки:</Table.Cell>
+                            <Table.Cell>Долг:</Table.Cell>
+                            <Table.Cell><span className="green">{formatAmount(creditAmount)}</span></Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell>Срок кредита:</Table.Cell>
                             <Table.Cell>{`${monthsCount} мес. (${Math.floor(monthsCount / 12)} лет)`}</Table.Cell>
                         </Table.Row>
                         <Table.Row>
@@ -351,17 +356,37 @@ export class CalculatorPage extends React.Component<TProps, State> {
 
         for (let i = 0; i < monthsCount; i++) {
             const payment: Payment = payments[i];
-            const repaymentsInMonth: number = getRepaymentsMonthTotal(payment.repayments);
+            // const repaymentsInMonth: number = getRepaymentsMonthTotal(payment.repayments);
+
+            const days = payment.days;
+            const daysCount = days.length;
+
+            for (let y = 0; y < daysCount; y++) {
+                const day = days[y];
+
+                rows.push(
+                    <Table.Row key={`${+payment.date}__${day.number}`}>
+                        <Table.Cell>-</Table.Cell>
+                        <Table.Cell>{formatDate(payment.date.subtract(daysCount - y, 'day'))}</Table.Cell>
+                        <Table.Cell>+{formatAmount(day.percentsPerDay)}, <span className="red">{formatAmount(day.percentsByDay)}</span></Table.Cell>
+                        <Table.Cell>-</Table.Cell>
+                        <Table.Cell>-</Table.Cell>
+                        <Table.Cell>-</Table.Cell>
+                        {/* <Table.Cell>{formatAmount(payment.currentCreditBody)}</Table.Cell> */}
+                    </Table.Row>
+                );
+            }
 
             rows.push(
                 <Table.Row key={+payment.date} index={i} >
                     <Table.Cell>{payment.number}</Table.Cell>
-                    <Table.Cell>{formatDate(payment.date)}</Table.Cell>
-                    <Table.Cell>{formatAmount(payment.amount)}</Table.Cell>
-                    <Table.Cell>{formatAmount(payment.percents)}</Table.Cell>
-                    <Table.Cell>{formatAmount(payment.bodyPayment)}</Table.Cell>
+                    <Table.Cell><u><b>{formatDate(payment.date)}</b></u></Table.Cell>
+                    <Table.Cell><b className="red">{formatAmount(payment.percents)}</b></Table.Cell>
+                    <Table.Cell><b className="green">{formatAmount(payment.bodyPayment)}</b></Table.Cell>
+                    <Table.Cell><u><b>{formatAmount(payment.amount)}</b></u></Table.Cell>
+                    {/*
                     <Table.Cell>{formatAmount(repaymentsInMonth)}</Table.Cell>
-                    {/* Редактируемое поле для изменения суммы досрочного платежа.
+                    Редактируемое поле для изменения суммы досрочного платежа.
                     <Table.Cell>
                         <RepaymentCell
                             disabled={i === 0}
@@ -373,7 +398,7 @@ export class CalculatorPage extends React.Component<TProps, State> {
                         />
                     </Table.Cell>
                      */}
-                    <Table.Cell>{formatAmount(payment.currentCreditBody)}</Table.Cell>
+                    <Table.Cell><b className="green">{formatAmount(payment.currentCreditBody)}</b></Table.Cell>
                 </Table.Row>
             );
         }
@@ -390,13 +415,13 @@ export class CalculatorPage extends React.Component<TProps, State> {
                 <Table celled>
                     <Table.Header>
                         <Table.Row>
-                            <Table.HeaderCell>№</Table.HeaderCell>
-                            <Table.HeaderCell>Дата платежа</Table.HeaderCell>
-                            <Table.HeaderCell>Сумма платежа</Table.HeaderCell>
-                            <Table.HeaderCell>Проценты за текущий месяц</Table.HeaderCell>
-                            <Table.HeaderCell>Плата в счёт тела кредита</Table.HeaderCell>
-                            <Table.HeaderCell>Сумма досрочного погашения в этом месяце</Table.HeaderCell>
-                            <Table.HeaderCell>Тело кредита</Table.HeaderCell>
+                            <Table.HeaderCell>№ платежа</Table.HeaderCell>
+                            <Table.HeaderCell>Дата</Table.HeaderCell>
+                            <Table.HeaderCell>Проценты</Table.HeaderCell>
+                            <Table.HeaderCell>Основной долг</Table.HeaderCell>
+                            <Table.HeaderCell>К оплате</Table.HeaderCell>
+                            {/* <Table.HeaderCell>Сумма досрочного погашения в этом месяце</Table.HeaderCell> */}
+                            <Table.HeaderCell>Остаток долга</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
 

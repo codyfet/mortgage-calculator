@@ -90,6 +90,19 @@ export function calculatePayments (
          * Чтобы пустую выплату не добавялть, мы проверяем bodyPayment на 0.
          */
         if (newCurrentCreditBody >= 0 && bodyPayment !== 0) {
+            const prevPaymentDate = paymentDate.subtract(1, 'month');
+            const daysCount = getDifferenceDaysBetweenDates(prevPaymentDate, paymentDate);
+            const percentsPerDay = percents / daysCount;
+            const days: Day[] = [];
+
+            for (let i = 1; i <= daysCount; i++) {
+                days.push({
+                    number: i,
+                    percentsPerDay,
+                    percentsByDay: i === 1 ? percentsPerDay : days[i - 2].percentsByDay + percentsPerDay
+                });
+            }
+
             payments.push({
                 number: i,
                 date: paymentDate,
@@ -100,6 +113,7 @@ export function calculatePayments (
                     date: paymentDate,
                     amount: monthlyRepayment
                 }],
+                days,
                 currentCreditBody: newCurrentCreditBody
             });
         } else {

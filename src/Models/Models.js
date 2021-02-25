@@ -22,6 +22,19 @@ export type Payment = {
 }
 
 /**
+ * Модель день.
+ *
+ * @prop {number} number Номер.
+ * @prop {number} percentsPerDay Сумма процентов в день.
+ * @prop {number} percentsByDay Сумма процентов за период с начала месяца до текущего дня.
+ */
+export type Day = {
+    number: number;
+    percentsPerDay: number;
+    percentsByDay: number;
+}
+
+/**
  * Модель "Досрочный платёж".
  * Досрочных платежей в месяц может быть сколько угодно, можно делать хоть каждый день.
  *
