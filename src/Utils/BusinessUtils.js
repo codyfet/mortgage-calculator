@@ -1,6 +1,7 @@
 //@flow
 import type {Payment, Repayment} from '../Models/Models';
 import {getDifferenceDaysBetweenDates, getNumberDaysOfYear} from './Utils';
+import dayjs from 'dayjs';
 
 /**
  * Возвращает сумму всех досрочных погащений за месяц.
@@ -62,11 +63,11 @@ export function calculatePayments (
     rate: number
 ): Payment[] {
     const payments: Payment[] = [];
-    const firstPaymentDate = new Date(startDate.setMonth(1));
+    const firstPaymentDate = dayjs(startDate).add(1, 'month');
 
-    for (let i = 1; i <= monthsCount; i++) {
+    for (let i = 1; i <= monthsCount + 1; i++) {
         const isFirstPayment = i === 1;
-        const paymentDate = new Date(new Date(firstPaymentDate).setMonth(startDate.getMonth() + i));
+        const paymentDate = firstPaymentDate.add(i - 1, 'month');
         const prevPayment: Payment = isFirstPayment ? null : payments[i - 2];
         const currentCreditBody = isFirstPayment ? creditAmount : prevPayment.currentCreditBody;
         const percents = calculatePercentsForMonth(currentCreditBody, paymentDate, rate);
@@ -83,7 +84,12 @@ export function calculatePayments (
             newCurrentCreditBody = newCurrentCreditBody - monthlyRepayment;
         }
 
-        if (newCurrentCreditBody >= 0) {
+        /**
+         * Если тело кредита равно нулю, то значит остался последний платёж.
+         * Так как у нас индексация сдвинута на один (по умолчанию отсчёт идёт с 0), то в последняя выплата зачастую рисуется пустая.
+         * Чтобы пустую выплату не добавялть, мы проверяем bodyPayment на 0.
+         */
+        if (newCurrentCreditBody >= 0 && bodyPayment !== 0) {
             payments.push({
                 number: i,
                 date: paymentDate,
@@ -112,16 +118,16 @@ export function calculatePayments (
  * Расчитывает и возвращает сумму процентов в конкретный месяц.
  *
  * @param {number} currentCreditBody Оставшееся тело кредита.
- * @param {Date} currentDate Дата ежемесячного платежа (в месяце, для которого расчитываем проценты).
+ * @param {DateJS} currentDate Дата ежемесячного платежа (в месяце, для которого расчитываем проценты).
  */
-function calculatePercentsForMonth (currentCreditBody: number, currentDate: Date, rate: number): number {
+function calculatePercentsForMonth (currentCreditBody: number, currentDate: DateJS, rate: number): number {
     let percents = null;
-    const currentYear = currentDate.getFullYear();
+    const currentYear = currentDate.year();
 
     // Если дата платежа не приходится на январь.
-    if (currentDate.getMonth() !== 0) {
+    if (currentDate.month() !== 0) {
         const currentPaymentDaysCount = getDifferenceDaysBetweenDates(
-            new Date(new Date(currentDate).setMonth(currentDate.getMonth() - 1)),
+            currentDate.subtract(1, 'month'),
             currentDate
         );
 
@@ -132,14 +138,14 @@ function calculatePercentsForMonth (currentCreditBody: number, currentDate: Date
         // Если дата платежа приходится на январь, то необходимо отдельно посчитать часть за предыдущий год и часть за текущий год.
     } else {
         const currentPaymentDaysCount1 = getDifferenceDaysBetweenDates(
-            new Date(new Date(currentDate).setMonth(currentDate.getMonth() - 1)),
-            new Date(currentYear - 1, 11, 31) // 31 декабря.
-        );
+            currentDate.subtract(1, 'month'),
+            dayjs(new Date(currentYear - 1, 11, 31)), // 31 декабря.
+        ) + 1;
 
         const currentPaymentDaysCount2 = getDifferenceDaysBetweenDates(
-            new Date(currentYear, 0, 1), // 1 января.
+            dayjs(new Date(currentYear, 0, 1)), // 1 января.
             currentDate
-        );
+        ) + 1;
 
         percents =
             (currentCreditBody * rate * currentPaymentDaysCount1) /

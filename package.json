@@ -49,6 +49,7 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
+    "dayjs": "^1.10.4",
     "lodash": "^4.17.20",
     "react": "^16.8.6",
     "react-datepicker": "^2.8.0",

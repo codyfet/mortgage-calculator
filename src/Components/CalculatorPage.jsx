@@ -53,7 +53,7 @@ type State = {
 /**
  * Компонент Страница с ипотечным калькулятором.
  *
- * Формула и описание можно помотерть здесь http://mobile-testing.ru/loancalc/rachet_dosrochnogo_pogashenia/.
+ * Формула и описание можно посмотреть здесь http://mobile-testing.ru/loancalc/rachet_dosrochnogo_pogashenia/.
  */
 export class CalculatorPage extends React.Component<TProps, State> {
 

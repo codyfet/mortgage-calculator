@@ -1,24 +1,10 @@
 /**
  * Вовращает дату в формате MM.DD.YYYY.
  *
- * https://stackoverflow.com/questions/12409299/how-to-get-current-formatted-date-dd-mm-yyyy-in-javascript-and-append-it-to-an-i
- *
- * @param {Date} date Значение типа Date.
+ * @param {DateJS} date Значение типа Date.
  */
 export function formatDate(date) {
-    let dd = date.getDate();
-    let mm = date.getMonth() + 1; // January is 0!
-    const yyyy = date.getFullYear();
-
-    if (dd < 10) {
-        dd = '0' + dd;
-    }
-
-    if (mm < 10) {
-        mm = '0' + mm;
-    }
-
-    return dd + '.' + mm + '.' + yyyy;
+    return date.format('DD.MM.YYYY');
 }
 
 /**
@@ -61,12 +47,9 @@ function isLeapYear(year) {
 /**
  * Вовращает разницу в днях между Второй датой и Первой датой.
  *
- * @param {Date} date1 Первая дата.
- * @param {Date} date2 Вторая дата.
+ * @param {DateJS} date1 Первая дата.
+ * @param {DateJS} date2 Вторая дата.
  */
 export function getDifferenceDaysBetweenDates(date1, date2) {
-    const diffTime = Math.abs(date2.getTime() - date1.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays;
+    return date2.diff(date1, "day");
 }
