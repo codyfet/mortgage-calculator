@@ -8,6 +8,7 @@ import {formatAmount, formatDate} from '../Utils/Utils';
 import {getTotalAmount} from '../Utils/BusinessUtils';
 import type {Dispatch, Payment, ReduxState} from '../Models/Models';
 import "react-datepicker/dist/react-datepicker.css";
+import {VTable} from "./VirtualizedTable";
 
 type StateProps = {
     creditAmount: number;
@@ -412,21 +413,7 @@ export class CalculatorPage extends React.Component<TProps, State> {
     renderResultTable () {
         return (
             <Segment>
-                <Table celled>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell>№ платежа</Table.HeaderCell>
-                            <Table.HeaderCell>Дата</Table.HeaderCell>
-                            <Table.HeaderCell>Проценты</Table.HeaderCell>
-                            <Table.HeaderCell>Основной долг</Table.HeaderCell>
-                            <Table.HeaderCell>К оплате</Table.HeaderCell>
-                            {/* <Table.HeaderCell>Сумма досрочного погашения в этом месяце</Table.HeaderCell> */}
-                            <Table.HeaderCell>Остаток долга</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-
-                    <Table.Body>{this.renderResultRows()}</Table.Body>
-                </Table>
+                <VTable monthsCount={this.props.monthsCount} payments={this.props.payments} />
             </Segment>
         );
     }
